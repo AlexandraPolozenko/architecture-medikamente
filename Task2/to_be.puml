@@ -1,0 +1,66 @@
+@startuml
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Person(client, "Клиент", "Клиент клиники")
+Person(receptionist, "Респешн", "Сотрудник ресепшена")
+Person(doctor, "Врач", "Врач клиники")
+Person(cassier, "Кассир", "Кассир")
+Person(bookskeeper, "Бухгалтер", "Бухгалтер компании")
+
+System(medikamente, "Медикаменте", "Сервис для записи и работы с пациентами")
+
+Container_Boundary(medikamente, "Сервис для записи и работы с пациентами") {
+  Container(uiClient, "UI клиента", "TypeScript, React", "UI для работы с записями для клиента")
+  Container(ui, "UI сотрудника", "TypeScript, React", "UI для работы с карточкой клиента")
+  Container(сlientsService, "Сервис клиентов", "Java, SpringBoot", "Сервис по работе с данными клиентов")
+  Container(laboratorieService, "Сервис интеграции с лабораторией", "Java, SpringBoot", "Сервис для получения данных по анализам")
+  Container(timeService, "Сервис записи", "Java, SpringBoot", "Сервис по работе с записью на прием")
+  System(auth, "Авторизация", "Сервис авторизации")
+  ContainerDb(dbTime, "Хранилище записей", "PostgreSQL", "Информация о записях на прием")
+  ContainerDb(dbMed, "Хранилище мед данных", "PostgreSQL", "Результаты осмотра/анализов")
+  ContainerDb(dbDocs, "Хранилище документов", "S3", "Документы клиентов")
+
+}
+
+
+Container(notifiсations, "Сервис уведомлений", "Java, SpringBoot", "Сервис для отправки уведомлений")
+Container(pay, "Сервис платежей", "Java, SpringBoot", "Сервис интеграция с платежным шлюзом")
+
+System_Ext(mail, "Почтовый сервер", "Отправка уведомлений клиентам")
+System_Ext(payments, "Платежная система", "Проведение платежей")
+System_Ext(laboratorie, "Лаборатория", "Проведение анализов")
+
+System(kkm, "ККМ", "Контрольно-кассовая машина")
+System(1c, "1С БП", "1С бухгалтерии")
+
+
+Rel(client, uiClient, "Запись на прием", "HTTPS")
+Rel(receptionist, ui, "Заведение карточки клиента", "HTTPS")
+Rel(doctor, ui, "Добавление результатов осмотра/анализов", "HTTPS")
+
+Rel(uiClient, timeService, "Запись на прием", "HTTPS")
+Rel(ui, сlientsService, "Работа с клиентами", "HTTPS")
+
+Rel(timeService, dbTime, "бд")
+Rel(сlientsService, dbDocs, "бд")
+Rel(сlientsService, dbMed, "бд")
+
+Rel(laboratorie, laboratorieService, "Получение анализов", "Kafka")
+Rel(laboratorieService, сlientsService, "Добавление анализов клиенту", "HTTPS")
+
+Rel(сlientsService, auth, "Проверка авторизации", "HTTPS")
+Rel(timeService, auth, "Проверка авторизации", "HTTPS")
+
+Rel(timeService, notifiсations, "Подтверждение записи", "HTTPS")
+Rel(pay, notifiсations, "Уведомление о платеже", "HTTPS")
+Rel(notifiсations, mail, "Уведомления", "HTTPS")
+
+Rel(cassier, kkm, "Оплата")
+Rel(kkm, 1c, "Информация об оплате", "TCP/IP-OLE")
+Rel(bookskeeper, 1c, "Процессинг платежей")
+Rel(pay, 1c, "Регистрация платежа", "TCP/IP-OLE")
+Rel(pay, payments, "Платежи", "HTTPS")
+
+
+@enduml
